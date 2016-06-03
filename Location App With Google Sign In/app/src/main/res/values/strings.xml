@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Location App With Google Sign In</string>
+    <string name="title_activity_maps">MapsActivity</string>
+</resources>
