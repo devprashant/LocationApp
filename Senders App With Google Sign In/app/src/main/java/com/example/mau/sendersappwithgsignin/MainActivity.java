@@ -1,4 +1,4 @@
-package com.example.mau.sendersappwithgsignin;
+package com.example.probook.sendersappwithgsignin;
 
 import android.Manifest;
 import android.app.PendingIntent;
@@ -53,9 +53,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseDatabase mdatabase;
     private String userId;
-    private boolean userRegistered = false;
     private long MIN_TIME_TO_UPDATE = 1;
     private float MIN_DISTANCE_TO_UPDATE = 0;
+    private boolean userRegistered = false;
 
 
     private class MyLocationListener implements LocationListener {
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             vehicleLocation.setLatitude(String.valueOf(location.getLatitude()));
             vehicleLocation.setLongitude(String.valueOf(location.getLongitude()));
 
-            if(userRegistered) {
+            if (userRegistered) {
                 mdatabase.getReference().child("vehicles").child(userId).child("location")
                         .setValue(vehicleLocation)
                         .addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -138,9 +138,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if(user != null){
                     ((TextView)findViewById(R.id.tvLoginStatus)).setText("Device Registered");
+                    findViewById(R.id.btnSignout).setEnabled(true);
+                    findViewById(R.id.btnRevokeAccess).setEnabled(true);
+                    userRegistered = true;
                     writeNewUserToDB(user);
                 } else {
                     Log.d(TAG, "onAuthStateChanged:signed_out");
+                    findViewById(R.id.btnSignout).setEnabled(false);
+                    findViewById(R.id.btnRevokeAccess).setEnabled(false);
+                    userRegistered = false;
                     ((TextView)findViewById(R.id.tvLoginStatus)).setText("Device not registered");
                 }
             }
@@ -156,8 +162,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.btnSignout).setOnClickListener(this);
         findViewById(R.id.btnRevokeAccess).setOnClickListener(this);
 
-        //Hide Sign out button
-        findViewById(R.id.btnSignout).setVisibility(View.GONE);
     }
 
     @Override
@@ -218,18 +222,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if(task.isSuccessful()){
-                            Log.d(TAG, "user added");
-                            userRegistered = true;
-                            //Intent intent = new Intent(LoginActivity.this,MapsActivity.class);
-                            //startActivity(intent);
-                            //finish();
+                            Log.d(TAG, "vehicle added");
                         }
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        ((TextView)findViewById(R.id.tvLoginError)).setText("Firebase new user add failure: " + e.toString());
+                        ((TextView)findViewById(R.id.tvLoginError)).setText("Firebase new vehicle add failure: " + e.toString());
                     }
                 });
     }
@@ -250,7 +250,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 signOut();
                 break;
             case R.id.btnRevokeAccess:
-                revokeAccess();
+                try {
+                    userRegistered = false;
+                    Thread.sleep(3000); // Sleep app for 3 seconds so that update delivery to server stops before attempting to delete.
+                    revokeAccess();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 break;
         }
     }
@@ -265,7 +271,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final FirebaseUser userToDelete = FirebaseAuth.getInstance().getCurrentUser();
 
         // 1.Delete user data from database
-
+        // Remember , data can only be deleted in database if it follow the defined rules.
         mdatabase.getReference().child("vehicles").child(userToDelete.getUid())
                 .setValue(null)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -275,6 +281,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             if(task.isSuccessful()){
                                 Log.d(TAG, "user deleted from database");
                                 // 2.Delete user from Dashboard
+
                                 deleteUserFromAuthDashBoard(userToDelete);
                             }
                         }
@@ -299,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         @Override
                         public void onResult(@NonNull Status status) {
                             ((TextView)findViewById(R.id.tvLoginStatus)).setText("Device Deregistered");
-                            userRegistered = false;
+                            //findViewById(R.id.btnRevokeAccess).setEnabled(false);
                         }
                     });
                 }
@@ -314,7 +321,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(new ResultCallback<Status>() {
             @Override
             public void onResult(@NonNull Status status) {
-                ((TextView)findViewById(R.id.tvLoginStatus)).setText("user Signed out");
+                ((TextView)findViewById(R.id.tvLoginStatus)).setText("Device Signed out");
             }
         });
     }

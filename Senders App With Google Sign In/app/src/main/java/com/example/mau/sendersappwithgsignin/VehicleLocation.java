@@ -1,4 +1,4 @@
-package com.example.mau.sendersappwithgsignin;
+package com.example.probook.sendersappwithgsignin;
 
 /**
  * Created by mau on 6/3/2016.
