@@ -1,4 +1,4 @@
-package com.example.mau.locationappwithgooglesignin;
+package com.example.probook.locationappwithgooglesignin;
 
 /**
  * Created by mau on 5/31/2016.

@@ -1,4 +1,4 @@
-package com.example.mau.locationappwithgooglesignin;
+package com.example.probook.locationappwithgooglesignin;
 
 import android.content.Intent;
 import android.support.annotation.NonNull;
