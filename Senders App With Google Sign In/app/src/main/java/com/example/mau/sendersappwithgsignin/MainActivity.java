@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseDatabase mdatabase;
     private String userId;
-    private long MIN_TIME_TO_UPDATE = 1;
+    private long MIN_TIME_TO_UPDATE = 10000;
     private float MIN_DISTANCE_TO_UPDATE = 0;
     private boolean userRegistered = false;
 
@@ -65,11 +65,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             txtLongitude.setText(String.valueOf(location.getLongitude()));
 
             String zoomValue = etZoom.getText().toString();
+            //Vehicle Location
             VehicleLocation vehicleLocation = new VehicleLocation();
             vehicleLocation.setLatitude(String.valueOf(location.getLatitude()));
             vehicleLocation.setLongitude(String.valueOf(location.getLongitude()));
 
+            // Vehicle Device Stats
+            DeviceStats deviceStats = new DeviceStats(getBaseContext());
+
             if (userRegistered) {
+                // Vehcile location update
                 mdatabase.getReference().child("vehicles").child(userId).child("location")
                         .setValue(vehicleLocation)
                         .addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -83,7 +88,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         .addOnFailureListener(new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-                                ((TextView) findViewById(R.id.tvLoginError)).setText("Firebase location update failure: " + e.toString());
+                                ((TextView) findViewById(R.id.tvLoginError)).setText("Firebase vehicle location update failure: " + e.toString());
+                            }
+                        });
+
+                // Vehicle Device stats update
+                mdatabase.getReference().child("vehicles").child(userId).child("device_stats")
+                        .setValue(deviceStats)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    Log.d(TAG, "stats updated");
+                                }
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                ((TextView) findViewById(R.id.tvLoginError)).setText("Firebase vehicle stats update failure: " + e.toString());
                             }
                         });
             }
